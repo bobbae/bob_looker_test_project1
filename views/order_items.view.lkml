@@ -81,6 +81,19 @@ view: order_items {
     sql: ${TABLE}."SHIPPED_AT" ;;
   }
 
+  dimension_group: diff_order_shipped_delivered {
+    type:  duration
+    intervals: [
+      day,
+      week,
+      month,
+      quarter,
+      year
+    ]
+    sql_start:  ${shipped_date} ;;
+    sql_end:  ${delivered_date} ;;
+  }
+
   dimension: status {
     type: string
     sql: ${TABLE}."STATUS" ;;
@@ -96,6 +109,34 @@ view: order_items {
     type: count
     drill_fields: [detail*]
   }
+
+  measure: order_count {
+    type:  count_distinct
+    sql:  ${order_id} ;;
+  }
+
+  measure: avg_sales {
+    type:  average
+    sql:  ${sale_price} ;;
+    value_format_name: usd
+  }
+
+  measure: total_sales_email_users {
+    type:  sum
+    sql:   ${sale_price};;
+    filters: [ users.traffic_source: "Email" ]
+  }
+
+  measure: total_sales {
+    type:  sum
+    sql:  ${sale_price} ;;
+  }
+
+  measure: average_spend_per_user {
+    type: number
+    value_format_name: usd
+    sql: 1.0*${total_sales} / NULLIF(${users.count},0) ;;
+   }
 
   # ----- Sets of fields for drilling ------
   set: detail {
